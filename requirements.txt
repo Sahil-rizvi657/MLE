@@ -1,10 +1,11 @@
-awscli
-loguru
-mkdocs
-pip
-pytest
-python-dotenv
-ruff
-tqdm
-typer
--e .
+fastapi
+scikit-learn
+pandas
+numpy
+joblib
+matplotlib
+uvicorn
+sagemaker
+ipykernel
+boto3
+dvclive
