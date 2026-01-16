@@ -1,0 +1,236 @@
+% ============================================================
+\section{Model Theoretical Framework, Assumptions, and Limitations}
+
+% ============================================================
+\subsection{Model Framework and Theory}
+
+% ============================================================
+\subsubsection{Overview of the Model Theoretical Framework}
+
+The proposed model is a monthly, unsupervised anomaly detection framework designed to identify abnormal customer transaction behavior at scale. The framework operates on monthly aggregated transaction features and evaluates customer behavior from two complementary perspectives: (i) deviation from a peer population defined by segment and product, and (ii) deviation from the customer’s own historical transaction behavior.
+
+The model is explicitly grounded in robust multivariate statistics and statistical depth theory. Anomalies are defined as observations that lie far from the central region of the data distribution, where centrality is defined using high-breakdown robust estimators. The framework is designed to ensure robustness under contamination, interpretability of scores, theoretical false-positive control, and scalability to tens of millions of customers.
+
+% ============================================================
+\subsubsection{Modeling Methodology}
+
+The modeling methodology consists of the following sequential steps:
+
+\begin{enumerate}
+\item Aggregation of daily transaction-level data into monthly customer-level features to stabilize statistical properties.
+\item Specification of a contaminated population model separating inlier and anomalous behavior.
+\item Robust estimation of multivariate location and scatter for each segment--product peer group.
+\item Computation of peer-group anomaly scores using robust Mahalanobis distance.
+\item Computation of self-history anomaly scores using robust univariate statistics.
+\item Construction of a final anomaly score as a fixed weighted combination of peer-group and self-history deviations.
+\item Thresholding using theoretically derived chi-square quantiles.
+\end{enumerate}
+
+Each step is designed to avoid empirical tuning and to preserve model transparency and auditability.
+
+% ============================================================
+\subsubsection{Mathematical Framework}
+
+% -------------------------
+\paragraph{Monthly Aggregation}
+
+Let $Y_{i,t} \in \mathbb{R}^d$ denote daily transaction-derived feature vectors for customer $i$ on day $t$. Monthly aggregated features are defined as
+\begin{equation}
+X_{i,m} = g\left(\{Y_{i,t} : t \in m\}\right),
+\end{equation}
+where $g(\cdot)$ denotes robust aggregation operators such as sums, medians, trimmed means, and quantiles.
+
+Daily observations are assumed to admit the decomposition
+\begin{equation}
+Y_{i,t} = T_{i,t} + S_{i,t} + R_{i,t},
+\end{equation}
+where $T_{i,t}$ represents a slowly varying trend component, $S_{i,t}$ represents seasonal and calendar effects, and $R_{i,t}$ represents a heavy-tailed residual component.
+
+Due to periodicity of $S_{i,t}$ and averaging of $R_{i,t}$ under aggregation, monthly features satisfy
+\begin{equation}
+\mathrm{Var}(X_{i,m}) < \sum_{t \in m} \mathrm{Var}(Y_{i,t}),
+\end{equation}
+ensuring stabilization of second-order moments required for multivariate distance-based inference.
+
+% -------------------------
+\paragraph{Population and Contamination Model}
+
+For a fixed segment--product--month, customer observations are assumed to follow a contamination model
+\begin{equation}
+X \sim (1-\epsilon)F + \epsilon G,
+\end{equation}
+where $F$ denotes the inlier (legitimate) customer behavior distribution, $G$ denotes the anomalous behavior distribution, and $0 \le \epsilon < 0.5$.
+
+The inlier distribution $F$ is assumed to be elliptically symmetric:
+\begin{equation}
+X = \mu + AZ,
+\end{equation}
+where $\mu \in \mathbb{R}^d$ is the location vector, $A \in \mathbb{R}^{d \times d}$ satisfies $AA^\top = \Sigma$, and $Z$ is a spherically symmetric random vector with $\mathbb{E}[Z]=0$ and $\mathbb{E}[ZZ^\top]=I_d$.
+
+% -------------------------
+\paragraph{Peer-Group Robust Distance}
+
+Robust estimates of location $\hat{\mu}$ and scatter $\hat{\Sigma}$ are obtained using the Minimum Regularized Covariance Determinant (MRCD) estimator. The peer-group anomaly score is defined as
+\begin{equation}
+D^{\text{peer}}_{i,m}
+=
+(X_{i,m}-\hat{\mu})^\top
+\hat{\Sigma}^{-1}
+(X_{i,m}-\hat{\mu}).
+\end{equation}
+
+This distance measures multivariate deviation from the robustly estimated behavioral core of the peer population.
+
+% -------------------------
+\paragraph{Self-History Robust Distance}
+
+Each customer is independently evaluated against their own historical behavior using robust univariate statistics:
+\begin{equation}
+D^{\text{self}}_{i,m}
+=
+\sum_{j=1}^d
+\left(
+\frac{X^{(j)}_{i,m} - \mathrm{median}(X^{(j)}_{i,1:M})}
+{\mathrm{MAD}(X^{(j)}_{i,1:M})}
+\right)^2.
+\end{equation}
+
+This component captures individualized behavioral drift while remaining robust to historical anomalies.
+
+% -------------------------
+\paragraph{Final Score Construction}
+
+The final anomaly score is defined as
+\begin{equation}
+\text{FinalScore}_{i,m}
+=
+\alpha D^{\text{self}}_{i,m}
++
+(1-\alpha) D^{\text{peer}}_{i,m},
+\end{equation}
+where $\alpha \in [0,1]$ is a fixed, non-tuned weight reflecting the relative importance of self-history and peer-group deviation.
+
+Customers are flagged as anomalous if
+\begin{equation}
+\text{FinalScore}_{i,m} > \chi^2_{d,0.99}.
+\end{equation}
+
+% ============================================================
+\subsubsection{Statistical Theory and Chi-Square Justification}
+
+\paragraph{Known-Parameter Case}
+
+Assume $\mu$ and $\Sigma$ are known. The population Mahalanobis distance is
+\begin{equation}
+D^2 = (X-\mu)^\top \Sigma^{-1} (X-\mu).
+\end{equation}
+
+Substituting $X=\mu+AZ$ yields
+\begin{equation}
+D^2 = Z^\top A^\top \Sigma^{-1} A Z = Z^\top Z.
+\end{equation}
+
+If $Z_j \sim \mathcal{N}(0,1)$ independently, then
+\begin{equation}
+D^2 = \sum_{j=1}^d Z_j^2 \sim \chi^2_d.
+\end{equation}
+
+\paragraph{Elliptical Distribution Case}
+
+For spherically symmetric $Z$, the squared radius $\|Z\|^2$ has a radial distribution whose asymptotic behavior matches that of $\chi^2_d$, up to a scale factor.
+
+\paragraph{Estimated-Parameter Case}
+
+When $\mu$ and $\Sigma$ are estimated using MRCD,
+\begin{equation}
+\hat{\mu} \xrightarrow{p} \mu,
+\quad
+\hat{\Sigma} \xrightarrow{p} \Sigma.
+\end{equation}
+
+By Slutsky’s theorem,
+\begin{equation}
+(X-\hat{\mu})^\top \hat{\Sigma}^{-1} (X-\hat{\mu})
+\xrightarrow{d} \chi^2_d.
+\end{equation}
+
+Thus, chi-square thresholding is theoretically justified for inlier observations.
+
+% ============================================================
+\subsection{Literature Review}
+
+The proposed framework builds on robust anomaly detection methods developed for large-scale financial data, which demonstrate that robust Mahalanobis distance combined with high-breakdown covariance estimators yields stable anomaly detection under contamination. It also draws from statistical depth theory, which formalizes anomalies as observations with low centrality relative to a distribution.
+
+The selected approach implements a computationally feasible proxy for statistical depth that preserves robustness, interpretability, and scalability.
+
+% ============================================================
+\subsection{Assumptions and Limitations}
+
+% -------------------------
+\subsubsection{Assumptions}
+
+The model relies on the following assumptions:
+\begin{enumerate}
+\item Monthly aggregation sufficiently stabilizes second-order moments.
+\item Inlier customer behavior follows an elliptically symmetric distribution.
+\item The contamination proportion satisfies $\epsilon < 0.5$.
+\item Robust estimators (median, MAD, MRCD) are Fisher-consistent under the inlier model.
+\item The weighting parameter $\alpha$ is fixed and not calibrated on outcomes.
+\end{enumerate}
+
+% -------------------------
+\subsubsection{Limitations}
+
+The following limitations are acknowledged:
+\begin{enumerate}
+\item The chi-square approximation is asymptotic and may be conservative in small samples.
+\item Componentwise self-history distance ignores cross-feature dependence.
+\item Monthly aggregation may delay detection of very short-lived anomalies.
+\item The unsupervised framework does not directly optimize against labeled fraud outcomes.
+\end{enumerate}
+
+% ============================================================
+\subsection{Alternative Model Frameworks and Theories Considered}
+
+\subsubsection{Mean--Variance (Z-Score) Models}
+
+\begin{equation}
+Z = \frac{X - \bar{X}}{s},
+\end{equation}
+where $\bar{X}$ and $s$ have breakdown point zero. Under contamination, parameter estimates diverge, invalidating anomaly scores.
+
+\subsubsection{Percentile and IQR-Based Rules}
+
+\begin{equation}
+X > Q_{0.99}, \quad
+X \notin [Q_{0.25}-1.5\mathrm{IQR}, Q_{0.75}+1.5\mathrm{IQR}].
+\end{equation}
+These rules are univariate and unstable under drift.
+
+\subsubsection{kNN and Local Density Methods}
+
+\begin{equation}
+\lim_{n\to\infty}
+\frac{\min_j \|X_j-X\|}{\max_j \|X_j-X\|} = 1,
+\end{equation}
+demonstrating distance concentration and loss of discriminative power.
+
+\subsubsection{Clustering-Based Methods}
+
+\begin{equation}
+\mu = \frac{1}{n}\sum_{i=1}^n X_i,
+\end{equation}
+which has zero breakdown point and is highly sensitive to outliers.
+
+\subsubsection{Black-Box Machine Learning Models}
+
+These methods lack explicit likelihoods, theoretical thresholds, and auditability, making false-positive control mathematically undefined.
+
+\subsubsection{Full Statistical Depth Methods}
+
+Although theoretically robust, full depth methods require optimization over many projection directions, making them computationally infeasible at population scale.
+
+% ============================================================
+\subsection{Final Justification}
+
+The selected robust distance-based framework is the only approach that simultaneously satisfies robustness under contamination, scalability to large populations, explicit mathematical assumptions, theoretically derived thresholds, and governance requirements.
