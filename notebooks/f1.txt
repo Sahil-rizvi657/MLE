@@ -1,0 +1,56 @@
+\subsection*{Primary Metric: Alert Intensity and Traffic-Light Thresholds}
+
+Alert Intensity is selected as the primary monitoring metric because it normalizes ECM alert volumes to the monitored population, making the measure independent of customer growth, portfolio expansion, and operational capacity changes. This provides a stable and comparable indicator of monitoring pressure and is evaluated separately for intelligence-flagged (I) and non-intelligence (NI) alerts.
+
+\begin{equation}
+\text{Alert Intensity}_m^{I} = \frac{A_m^{I}}{N_m},
+\qquad
+\text{Alert Intensity}_m^{NI} = \frac{A_m^{NI}}{N_m}
+\end{equation}
+
+Let $\mu_{12}$ and $\sigma_{12}$ denote the 12-month historical mean and standard deviation of Alert Intensity, and  
+$MAD_{12} = \text{median}\left(|\text{Alert Intensity}_m - \tilde{A}_{12}|\right)$ be the Median Absolute Deviation around the 12-month median $\tilde{A}_{12}$.
+
+%--------------------------------------------------
+\paragraph{1. Standard Deviation Based Thresholds}
+
+\begin{equation}
+\text{Status}_{m}^{I} =
+\begin{cases}
+\text{Green},  & |\text{AI}_m^{I} - \mu_{12}^{I}| \le 2\sigma_{12}^{I} \\
+\text{Yellow}, & 2\sigma_{12}^{I} < |\text{AI}_m^{I} - \mu_{12}^{I}| \le 3\sigma_{12}^{I} \\
+\text{Red},    & |\text{AI}_m^{I} - \mu_{12}^{I}| > 3\sigma_{12}^{I}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\text{Status}_{m}^{NI} =
+\begin{cases}
+\text{Green},  & |\text{AI}_m^{NI} - \mu_{12}^{NI}| \le 2\sigma_{12}^{NI} \\
+\text{Yellow}, & 2\sigma_{12}^{NI} < |\text{AI}_m^{NI} - \mu_{12}^{NI}| \le 3\sigma_{12}^{NI} \\
+\text{Red},    & |\text{AI}_m^{NI} - \mu_{12}^{NI}| > 3\sigma_{12}^{NI}
+\end{cases}
+\end{equation}
+
+%--------------------------------------------------
+\paragraph{2. Robust MAD Based Thresholds}
+
+\begin{equation}
+\text{Status}_{m}^{I} =
+\begin{cases}
+\text{Green},  & |\text{AI}_m^{I} - \tilde{A}_{12}^{I}| \le 2\,MAD_{12}^{I} \\
+\text{Yellow}, & 2\,MAD_{12}^{I} < |\text{AI}_m^{I} - \tilde{A}_{12}^{I}| \le 3\,MAD_{12}^{I} \\
+\text{Red},    & |\text{AI}_m^{I} - \tilde{A}_{12}^{I}| > 3\,MAD_{12}^{I}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\text{Status}_{m}^{NI} =
+\begin{cases}
+\text{Green},  & |\text{AI}_m^{NI} - \tilde{A}_{12}^{NI}| \le 2\,MAD_{12}^{NI} \\
+\text{Yellow}, & 2\,MAD_{12}^{NI} < |\text{AI}_m^{NI} - \tilde{A}_{12}^{NI}| \le 3\,MAD_{12}^{NI} \\
+\text{Red},    & |\text{AI}_m^{NI} - \tilde{A}_{12}^{NI}| > 3\,MAD_{12}^{NI}
+\end{cases}
+\end{equation}
+
+The standard deviation approach provides sensitivity to sustained structural shifts, while the MAD-based method offers robustness to outliers and intelligence-driven spikes. Applying both methods separately to I and NI cohorts ensures balanced breach detection and clearer attribution of alert-volume movements.
