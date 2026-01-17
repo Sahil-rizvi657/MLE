@@ -6,7 +6,7 @@ import typer
 import openpyxl 
 import yaml
 
-from config import INTERIM_DATA_DIR, RAW_DATA_DIR, PROJ_ROOT
+from mle.config import INTERIM_DATA_DIR, RAW_DATA_DIR, PROJ_ROOT
 
 app = typer.Typer()
 

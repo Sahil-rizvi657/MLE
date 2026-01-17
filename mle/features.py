@@ -5,7 +5,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from config import PROCESSED_DATA_DIR, INTERIM_DATA_DIR
+from mle.config import PROCESSED_DATA_DIR, INTERIM_DATA_DIR
 
 app = typer.Typer()
 
@@ -52,11 +52,15 @@ def main(
             df["customer_id"] = file.stem
 
             # COMPUTE FEATURES
+            # features["customer_id"] = file.stem
+
             features = create_features(df)
 
             cust_num = int(file.stem.split("_")[2])
 
             features["target"] = 0 if cust_num < 5 else 1
+            features["customer_id"] = file.stem
+            
 
 
             features_list.append(features)
