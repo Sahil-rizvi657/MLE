@@ -1,3 +1,11 @@
 dataset:
   test_size: 0.2
   random_state: 42
+  rename_columns:
+    customer_id: customer_id
+    date: date
+    transaction_type: transaction_type
+    description: description
+    deposit: deposit
+    withdrawal: withdrawal
+    balance: balance
