@@ -9,3 +9,9 @@ dataset:
     deposit: deposit
     withdrawal: withdrawal
     balance: balance
+features:
+  fs: 1.0
+  nperseg: 64
+  noverlap: 0
+  bins: 33
+  

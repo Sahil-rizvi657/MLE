@@ -43,10 +43,8 @@ def clean_data(df):
 
 def prepare_data(df, Output_path):
 
-    # customers_df = {}
     print("Preparing data for each customer...")
 
-    # Ensure datetime
     df['date'] = pd.to_datetime(df['date'])
 
     unique_customers = df['customer_id'].unique()
