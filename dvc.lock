@@ -1,0 +1,56 @@
+schema: '2.0'
+stages:
+  dataset:
+    cmd: python mle/dataset.py
+    deps:
+    - path: data/raw/dataset.csv
+      hash: md5
+      md5: 89d2bd18f9e92e48583804e651a41ae2
+      size: 266659
+    - path: mle/dataset.py
+      hash: md5
+      md5: cac6ccae922581bc1971ea73589ca38e
+      size: 9163
+    outs:
+    - path: data/interim/
+      hash: md5
+      md5: 9310be49c4f45a0d676d4afbb71ae098.dir
+      size: 51834
+      nfiles: 10
+  features:
+    cmd: python mle/features.py
+    deps:
+    - path: data/interim/
+      hash: md5
+      md5: 9310be49c4f45a0d676d4afbb71ae098.dir
+      size: 51834
+      nfiles: 10
+    - path: mle/features.py
+      hash: md5
+      md5: bfad8ac91f7882d475e4d381eaefd960
+      size: 2080
+    outs:
+    - path: data/processed/features.csv
+      hash: md5
+      md5: e5d6e41fa650c6cf0ea582f7a3b9c5f3
+      size: 2496
+  train:
+    cmd: python mle/modeling/train.py
+    deps:
+    - path: data/processed/features.csv
+      hash: md5
+      md5: e5d6e41fa650c6cf0ea582f7a3b9c5f3
+      size: 2496
+    - path: mle/modeling/train.py
+      hash: md5
+      md5: 39839380402f24fb2ec28ea059a46e63
+      size: 2883
+    outs:
+    - path: dvclive/metrics.json
+      hash: md5
+      md5: ec0f8465fa21e316b1a515b62c05c8a6
+      size: 53
+    - path: models/model.pkl
+      hash: md5
+      md5: 804b04d8039c48517c5cc24bccaa2b58
+      size: 72201

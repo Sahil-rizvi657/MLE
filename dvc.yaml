@@ -1,0 +1,29 @@
+stages:
+  dataset:
+    cmd: python mle/dataset.py
+    deps:
+    - mle/dataset.py
+    - data/raw/dataset.csv
+    outs:
+    - data/interim/
+  features:
+    cmd: python mle/features.py
+    deps:
+    - mle/features.py
+    - data/interim/
+    outs:
+    - data/processed/features.csv
+  train:
+    cmd: python mle/modeling/train.py
+    deps:
+    - mle/modeling/train.py
+    - data/processed/features.csv
+    outs:
+    - models/model.pkl
+    metrics:
+    - dvclive/metrics.json
+metrics:
+- dvclive/metrics.json
+plots:
+- dvclive/plots/metrics:
+    x: step

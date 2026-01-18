@@ -14,4 +14,10 @@ features:
   nperseg: 64
   noverlap: 0
   bins: 33
-  
+modeling:
+  model_type: random_forest
+  n_estimators: 100
+  columns_to_drop:
+    - customer_id
+    - target
+  target: target  
